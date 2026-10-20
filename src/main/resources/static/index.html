@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Future Finance Planner</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="theme-light">
+
+    <!-- Auth Modal Overlay -->
+    <div id="authModalOverlay" class="modal-overlay" style="display: flex;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Future Finance Planner</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">Sign in or create an account to start planning.</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button id="tabBtnLogin" class="auth-tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+                <button id="tabBtnRegister" class="auth-tab-btn" onclick="switchAuthTab('register')">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleAuthSubmit(event, 'login')">
+                <div class="auth-form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" required autocomplete="username">
+                </div>
+                <div class="auth-form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-auth-submit">Sign In</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" onsubmit="handleAuthSubmit(event, 'register')" style="display: none;">
+                <div class="auth-form-group">
+                    <label for="regUsername">Username</label>
+                    <input type="text" id="regUsername" placeholder="Choose a username" required autocomplete="username">
+                </div>
+                <div class="auth-form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" placeholder="Create a password" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn-auth-submit">Sign Up</button>
+            </form>
+
+            <div id="authErrorMessage" class="auth-error-msg"></div>
+        </div>
+    </div>
+
+    <!-- History Modal Overlay -->
+    <div id="historyModalOverlay" class="modal-overlay" style="display: none;">
+        <div class="history-modal-card">
+            <div class="card-header flex-between" style="margin-bottom: 1.25rem;">
+                <div>
+                    <h3>Saved Progress History</h3>
+                    <p>View and reload past saved financial snapshots from your database.</p>
+                </div>
+                <button class="btn btn-secondary" onclick="closeHistoryModal()" style="padding: 0.35rem 0.85rem;">&times; Close</button>
+            </div>
+
+            <div class="table-container">
+                <table class="wealth-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Age</th>
+                            <th>Current Savings</th>
+                            <th>Monthly Income</th>
+                            <th>Monthly Savings</th>
+                            <th>Target Goal</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Loading saved history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo">
+                <h1>Future Finance Planner</h1>
+            </div>
+            <nav class="nav-links">
+                <a href="#onboarding">Data Input</a>
+                <a href="#metrics-report">Report Metrics</a>
+                <a href="#target-goal">Target Goal</a>
+                <a href="#dashboard">Wealth Graph</a>
+                <a href="#scenarios">Custom Events</a>
+                <a href="#tax-calculator">Income Tax Calculator</a>
+                <a href="#story">Financial Summary</a>
+            </nav>
+            <div class="header-actions">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">Toggle Theme</button>
+
+                <div id="userProfileMenuContainer" class="user-profile-menu-container" style="display: none;">
+                    <button class="user-icon-btn" id="userIconBtn" onclick="toggleUserDropdown(event)" title="User Profile Menu">
+                        <span class="user-avatar-icon">👤</span>
+                    </button>
+                    <div class="user-dropdown-menu" id="userDropdownMenu" style="display: none;">
+                        <div class="dropdown-header">
+                            <span class="dropdown-username" id="dropdownUsername">User</span>
+                        </div>
+                        <hr class="dropdown-divider">
+                        <button class="dropdown-item" onclick="showHistoryModal(); toggleUserDropdown(event);">
+                            <span> History & Progress</span>
+                        </button>
+                        <button class="dropdown-item danger" onclick="handleSignOut(); toggleUserDropdown(event);">
+                            <span> Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="hero-section">
+            <h2>Direct Savings Growth & Income Tax Optimization (₹ INR)</h2>
+            <p>Calculate your accumulated savings and compare New vs Old Tax Regime liabilities.</p>
+        </section>
+
+        <!-- 1. Input Section -->
+        <section id="onboarding" class="card onboarding-card">
+            <div class="card-header flex-between">
+                <div>
+                    <h3>Financial Onboarding</h3>
+                    <p>Input your financial details or select a quick profile preset below.</p>
+                </div>
+                <div class="preset-buttons">
+                    <span>Presets:</span>
+                    <button class="preset-btn" onclick="loadPreset('student')">Student</button>
+                    <button class="preset-btn" onclick="loadPreset('fresh_grad')">Fresh Grad</button>
+                    <button class="preset-btn" onclick="loadPreset('professional')">Professional</button>
+                </div>
+            </div>
+
+            <div id="tab-manual" class="tab-content active">
+                <form id="manual-form" class="form-grid">
+                    <div class="form-group">
+                        <label for="currentAge">Current Age</label>
+                        <input type="number" id="currentAge" value="" placeholder="e.g. 22" min="18" max="70" oninput="autoCalculateMonthlySavingsOnly()" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="retirementAge">Target Retirement Age</label>
+                        <input type="number" id="retirementAge" value="" placeholder="e.g. 55" min="40" max="80" oninput="autoCalculateMonthlySavingsOnly()" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="currentSavings">Current Savings / FD (₹)</label>
+                        <input type="number" id="currentSavings" value="" placeholder="e.g. 150000" min="0" step="1000" oninput="autoCalculateMonthlySavingsOnly()" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyIncome">Monthly Salary / Income (₹)</label>
+                        <input type="number" id="monthlyIncome" value="" placeholder="e.g. 75000" min="0" step="1000" oninput="autoCalculateMonthlySavingsOnly()" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyExpenses">Monthly Living Expenses (₹)</label>
+                        <input type="number" id="monthlyExpenses" value="" placeholder="e.g. 40000" min="0" step="1000" oninput="autoCalculateMonthlySavingsOnly()" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyInvestment">Monthly Savings (₹)</label>
+                        <input type="number" id="monthlyInvestment" value="" placeholder="Auto-calculated (Income - Expenses)" readonly tabindex="-1">
+                    </div>
+                    <div class="form-group full-width">
+                        <button type="button" class="btn btn-primary btn-recalc" id="recalcBtn" onclick="executeFullCalculation()">
+                            <span id="recalcBtnText">Recalculate Wealth & Tax Plan (₹)</span>
+                            <span id="recalcLoader" class="spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- 2. Report Metrics -->
+        <section id="metrics-report" class="card metrics-report-card">
+            <div class="card-header">
+                <h3>Financial Metrics Summary</h3>
+                <p>Key financial health metrics and wealth accumulation figures.</p>
+            </div>
+            <div class="metrics-grid two-column-grid">
+                <div class="metric-card">
+                    <span class="metric-label">Total Projected Wealth at Retirement</span>
+                    <span class="metric-value text-success" id="metricMedianWealth">₹0</span>
+                    <span class="metric-subtext">Current Savings + (Years × Annual Savings)</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Annual Savings Added</span>
+                    <span class="metric-value text-accent" id="metricAnnualSavings">₹0 / Year</span>
+                    <span class="metric-subtext">Monthly Savings × 12 Months</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Target Goal Section -->
+        <!-- 3. Target Goal Section -->
+<section id="target-goal" class="card target-goal-card">
+    <div class="card-header">
+        <h3>Target Goal Calculator</h3>
+        <p>Set a custom target wealth amount and timeline to calculate required yearly/monthly savings.</p>
+    </div>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="targetGoalAmount">Target Goal Amount (₹)</label>
+            <input type="number" id="targetGoalAmount" value="" placeholder="e.g. 5000000 (Enter Target Amount)" step="100000" oninput="calculateTargetGoal()">
+        </div>
+        <div class="form-group">
+            <label for="targetGoalYears">Target Timeline (Years)</label>
+            <input type="number" id="targetGoalYears" value="" placeholder="e.g. 10 (Enter Target Timeline)" min="1" max="50" oninput="calculateTargetGoal()">
+        </div>
+    </div>
+    <div class="metrics-grid target-metrics-grid" style="margin-top: 1.25rem;">
+        <div class="metric-card">
+            <span class="metric-label">Required Savings Per Year</span>
+            <span class="metric-value text-success" id="targetReqYear">₹0 / Year</span>
+            <span class="metric-subtext">To reach goal in specified timeline</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Required Savings Per Month</span>
+            <span class="metric-value text-accent" id="targetReqMonth">₹0 / Month</span>
+            <span class="metric-subtext">Monthly target allocation needed</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-label">Expected Time at Current Rate</span>
+            <span class="metric-value text-warning" id="targetEstYears">Enter Target Goal</span>
+            <span class="metric-subtext">At current monthly savings rate</span>
+        </div>
+    </div>
+</section>
+
+        <!-- 4. Graph / Table View -->
+        <section id="dashboard" class="dashboard-section">
+            <div class="card chart-card">
+                <div class="card-header flex-between">
+                    <div>
+                        <h3>Accumulated Wealth Projection (₹ INR)</h3>
+                        <p>Year-by-year calculation:</p>
+                    </div>
+                    <div class="view-toggle-buttons">
+                        <button class="toggle-view-btn active" id="btnGraphView" onclick="switchChartView('graph')">Graph View</button>
+                        <button class="toggle-view-btn" id="btnTableView" onclick="switchChartView('table')">Table View</button>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper" id="graphContainer">
+                    <canvas id="projectionChart"></canvas>
+                </div>
+
+                <div class="table-container" id="tableContainer" style="display: none;">
+                    <table class="wealth-table">
+                        <thead>
+                            <tr>
+                                <th>Timeline (Age)</th>
+                                <th>Year</th>
+                                <th>Annual Savings Added (₹)</th>
+                                <th>Custom Event Impact (₹)</th>
+                                <th>Total Accumulated Wealth (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wealthTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Custom Life Event Planner -->
+        <section id="scenarios" class="card scenario-card">
+            <div class="card-header">
+                <h3>Custom Life Event Planner</h3>
+                <p>Add major life events by target month, amount (₹), and duration to see how they impact your direct savings growth.</p>
+            </div>
+
+            <div class="custom-event-form-grid">
+                <div class="form-group">
+                    <label for="eventName">Event Name</label>
+                    <input type="text" id="eventName" placeholder="e.g. Salary Hike, Buy Car, Promotion, Pay Cut">
+                </div>
+                <div class="form-group">
+                    <label for="eventMonth">Target Month</label>
+                    <input type="number" id="eventMonth" value="" min="1" max="600" placeholder="e.g. 12 (Target Month)">
+                </div>
+                <div class="form-group">
+                    <label for="eventDuration">Impact Duration (Months)</label>
+                    <input type="number" id="eventDuration" value="" min="0" max="600" placeholder="e.g. 1 (Months, 0 for Lifetime)">
+                </div>
+                <div class="form-group">
+                    <label for="eventAmount">Amount (₹)</label>
+                    <input type="number" id="eventAmount" value="" step="1000" placeholder="e.g. 20000">
+                </div>
+                <div class="form-group">
+                    <label for="eventType">Impact Type</label>
+                    <select id="eventType" class="custom-select">
+                        <option value="+">+ Increase (Income / Bonus / Hike)</option>
+                        <option value="-">- Decrease (Expense / Pay Cut / Cost)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-custom-event" onclick="addCustomEvent()">Add Custom Life Event</button>
+                </div>
+            </div>
+
+            <div class="active-events-container">
+                <h4>Active Planned Life Events:</h4>
+                <div id="eventsList" class="events-list-grid"></div>
+            </div>
+        </section>
+
+        <!-- 6. Income Tax Calculator Section -->
+        <section id="tax-calculator" class="card tax-card">
+            <div class="card-header flex-between">
+                <div>
+                    <h3>Indian Income Tax Calculator (FY 2026–27)</h3>
+                    <p>Compare tax liabilities under the <strong>New Tax Regime</strong> vs <strong>Old Tax Regime</strong> based on your annual salary.</p>
+                </div>
+                <span class="badge" style="background: #e0e7ff; color: #4338ca; font-size: 0.82rem; padding: 0.3rem 0.75rem;">Interactive Tax Comparison</span>
+            </div>
+
+            <div class="form-grid" style="margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label for="taxAnnualIncome">Annual Gross Salary / Income (₹)</label>
+                    <input type="number" id="taxAnnualIncome" value="" step="10000" placeholder="e.g. 900000 (Enter Gross Salary)" oninput="calculateIncomeTax()">
+                </div>
+            </div>
+
+            <div class="tax-results-grid">
+                <div class="tax-result-card new-regime" id="cardNewRegime">
+                    <div class="tax-card-header">
+                        <span class="tax-regime-title">New Tax Regime</span>
+                        <span class="tax-badge recommended" id="badgeNewRegime">RECOMMENDED</span>
+                    </div>
+                    <div class="tax-amount" id="taxNewRegimeVal">₹0</div>
+                    <div class="tax-subtext">Total Annual Tax Payable (incl. 4% Cess)</div>
+
+                    <hr class="tax-divider">
+                    <div class="tax-breakdown-details">
+                        <div class="tax-row"><span>Gross Salary:</span> <strong id="taxNewGross">₹0</strong></div>
+                        <div class="tax-row"><span>Standard Deduction:</span> <strong class="text-success">- ₹75,000</strong></div>
+                        <div class="tax-row"><span>Net Taxable Income:</span> <strong id="taxNewTaxable">₹0</strong></div>
+                        <div class="tax-row"><span>Section 87A Rebate:</span> <strong id="taxNewRebate">Eligible up to ₹12L (Zero Tax)</strong></div>
+                        <div class="tax-row"><span>Health & Edu Cess (4%):</span> <strong id="taxNewCess">₹0</strong></div>
+                    </div>
+                </div>
+
+                <div class="tax-result-card old-regime" id="cardOldRegime">
+                    <div class="tax-card-header">
+                        <span class="tax-regime-title">Old Tax Regime</span>
+                        <span class="tax-badge" id="badgeOldRegime">OPTION</span>
+                    </div>
+                    <div class="tax-amount" id="taxOldRegimeVal">₹0</div>
+                    <div class="tax-subtext">Total Annual Tax Payable (incl. 4% Cess)</div>
+
+                    <hr class="tax-divider">
+                    <div class="tax-breakdown-details">
+                        <div class="tax-row"><span>Gross Salary:</span> <strong id="taxOldGross">₹0</strong></div>
+                        <div class="tax-row"><span>Standard Deduction:</span> <strong class="text-success">- ₹50,000</strong></div>
+                        <div class="tax-row"><span>Net Taxable Income:</span> <strong id="taxOldTaxable">₹0</strong></div>
+                        <div class="tax-row"><span>Health & Edu Cess (4%):</span> <strong id="taxOldCess">₹0</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tax-recommendation-box" id="taxRecommendationBox">
+                <div id="taxRecommendationText">
+                    <strong>Tax Recommendation:</strong> Click Recalculate to compare New vs Old Tax Regime savings.
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Financial Summary & Recommendations -->
+        <section class="card story-card" id="story">
+            <div class="card-header">
+                <h3>Financial Summary & Recommendations</h3>
+                <p>Retirement Readiness Assessment & Action Plan</p>
+            </div>
+
+            <div class="story-content" id="aiStoryContent">
+                <div class="readiness-score-header" style="margin-bottom: 0.75rem;">
+                    <span class="readiness-title" style="font-size: 1.25rem; font-weight: 700;">Retirement Readiness Score</span>
+                    <span class="readiness-badge" id="readinessBadge">0% ✓ Good</span>
+                </div>
+                <div class="readiness-progress-bar" style="margin-bottom: 1.25rem;">
+                    <div class="readiness-progress-fill" id="readinessProgressFill" style="width: 0%;"></div>
+                </div>
+
+                <p class="story-highlight" id="storyText" style="margin-bottom: 1rem;">
+                    Enter your financial details above and click Recalculate to generate your wealth projection summary.
+                </p>
+
+                <div id="targetGoalSummaryBox" style="margin-top: 0.75rem; margin-bottom: 0.75rem; display: none; line-height: 1.6; font-size: 1.05rem;"></div>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin: 1.5rem 0 0.5rem 0;">
+            <button class="btn btn-export" onclick="exportReport()" style="padding: 0.75rem 1.75rem; font-size: 1rem; border-radius: 8px;">
+                📄 Download Financial Report
+            </button>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 Future Finance Planner - Capstone Project</p>
+    </footer>
+
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
