@@ -14,7 +14,7 @@ public class GoogleGeminiAiService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getAiFinancialAdvice(double deficitAmount, int deficitYear, double monthlyIncome, double monthlyExpenses, double monthlySavings) {
-        if (GEMINI_API_KEY != null && !GEMINI_API_KEY.equals("AQ.Ab8RN6J2RyRRl1sFoRj1KxS4q9yPfVufsG7KOansYKDf1iSjCA") && !GEMINI_API_KEY.trim().isEmpty()) {
+        if (GEMINI_API_KEY != null && !GEMINI_API_KEY.equals("Gemini_API_Key") && !GEMINI_API_KEY.trim().isEmpty()) {
             try {
                 return callGoogleGeminiApi(deficitAmount, deficitYear, monthlyIncome, monthlyExpenses, monthlySavings);
             } catch (Exception e) {
