@@ -9,12 +9,12 @@ import java.util.*;
 @Service
 public class GoogleGeminiAiService {
 
-    public static final String GEMINI_API_KEY = "Gemini_API_Key";
+    public static final String GEMINI_API_KEY = "Your_Gemini_API_Key";
 
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String getAiFinancialAdvice(double deficitAmount, int deficitYear, double monthlyIncome, double monthlyExpenses, double monthlySavings) {
-        if (GEMINI_API_KEY != null && !GEMINI_API_KEY.equals("Gemini_API_Key") && !GEMINI_API_KEY.trim().isEmpty()) {
+        if (GEMINI_API_KEY != null && !GEMINI_API_KEY.equals("Your_Gemini_API_Key") && !GEMINI_API_KEY.trim().isEmpty()) {
             try {
                 return callGoogleGeminiApi(deficitAmount, deficitYear, monthlyIncome, monthlyExpenses, monthlySavings);
             } catch (Exception e) {
